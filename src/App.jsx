@@ -4,6 +4,41 @@ import './App.css'
 
 const DURATION = 4000
 const HUES = [352, 8, 336, 18, 300, 345]
+const NOTES_KEY = 'ficha-notas'
+const WHATSAPP = '51991145635'
+
+function openWhatsApp(text) {
+  const url = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(text)}`
+  window.open(url, '_blank', 'noopener,noreferrer')
+}
+
+function emptyNotes() {
+  return { reply: '', moments: {} }
+}
+
+function readNotes() {
+  try {
+    const raw = localStorage.getItem(NOTES_KEY)
+    if (!raw) return emptyNotes()
+    const data = JSON.parse(raw)
+    const moments = {}
+    if (data.moments && typeof data.moments === 'object') {
+      for (const [id, value] of Object.entries(data.moments)) {
+        if (typeof value === 'string' && value.trim()) moments[id] = value
+      }
+    }
+    return {
+      reply: typeof data.reply === 'string' ? data.reply.trim() : '',
+      moments,
+    }
+  } catch {
+    return emptyNotes()
+  }
+}
+
+function writeNotes(notes) {
+  localStorage.setItem(NOTES_KEY, JSON.stringify(notes))
+}
 
 const slides = [
   ...story.moments.map((moment) => ({
@@ -187,12 +222,23 @@ function MomentRow({ onOpen }) {
   )
 }
 
-function MomentModal({ moment, onClose }) {
+function MomentModal({ moment, note, onSaveNote, onClose }) {
   const closeRef = useRef(null)
+  const [draft, setDraft] = useState(note)
+  const [status, setStatus] = useState('')
 
   useEffect(() => {
     closeRef.current?.focus()
   }, [])
+
+  function commit(value, send = false) {
+    const next = value.trim()
+    if (next !== note) onSaveNote(moment.id, next)
+    setStatus(next ? (send ? 'Abriendo WhatsApp' : 'Guardado') : '')
+    if (send && next) {
+      openWhatsApp(`Tu versión de «${moment.titulo}»:\n${next}`)
+    }
+  }
 
   return (
     <div className="backdrop" onClick={onClose}>
@@ -216,14 +262,44 @@ function MomentModal({ moment, onClose }) {
         <div className="modal-copy">
           <p className="kicker">Momento</p>
           <h2 id="moment-title">{moment.titulo}</h2>
-          <p>{moment.texto}</p>
+          <p className="moment-text">{moment.texto}</p>
+          <form
+            className="note-field"
+            onSubmit={(event) => {
+              event.preventDefault()
+              commit(draft, true)
+            }}
+          >
+            <label htmlFor="moment-note">Tu versión de esta escena</label>
+            <textarea
+              id="moment-note"
+              value={draft}
+              maxLength={280}
+              rows={3}
+              placeholder="Escribe una línea sobre este momento"
+              onChange={(event) => {
+                setDraft(event.target.value)
+                setStatus('')
+              }}
+              onBlur={() => commit(draft)}
+            />
+            <p className="send-hint">Se abre WhatsApp para enviárselo.</p>
+            <div className="note-actions">
+              <p className="save-status" role="status">
+                {status}
+              </p>
+              <button type="submit" className="btn btn-play">
+                Enviar por WhatsApp
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
   )
 }
 
-function Player({ autoPlay, onClose }) {
+function Player({ autoPlay, notes, onSaveReply, onClose }) {
   const last = slides.length - 1
   const closeRef = useRef(null)
   const remaining = useRef(DURATION)
@@ -231,6 +307,9 @@ function Player({ autoPlay, onClose }) {
   const [run, setRun] = useState(autoPlay)
   const slide = slides[index]
   const isLast = index === last
+  const reply = notes.reply
+  const [draft, setDraft] = useState(reply)
+  const [editingReply, setEditingReply] = useState(!reply)
 
   useEffect(() => {
     closeRef.current?.focus()
@@ -254,6 +333,8 @@ function Player({ autoPlay, onClose }) {
 
   useEffect(() => {
     function onKey(event) {
+      const tag = event.target?.tagName
+      if (tag === 'TEXTAREA' || tag === 'INPUT') return
       if (event.key === 'ArrowRight') {
         event.preventDefault()
         setIndex((current) => Math.min(current + 1, last))
@@ -288,6 +369,62 @@ function Player({ autoPlay, onClose }) {
               <h2 className="player-script">{slide.titulo}</h2>
               <Heart filled className="title-heart end-heart" />
               <p className="player-end-text">{slide.texto}</p>
+              <div className="reply-box">
+                <p className="kicker">{reply && !editingReply ? 'Tus créditos' : 'Tu turno'}</p>
+                {reply && !editingReply ? (
+                  <>
+                    <p className="reply-saved">{reply}</p>
+                    <button
+                      type="button"
+                      className="text-btn"
+                      onClick={() => {
+                        setDraft(reply)
+                        setEditingReply(true)
+                      }}
+                    >
+                      Cambiar
+                    </button>
+                  </>
+                ) : (
+                  <form
+                    onSubmit={(event) => {
+                      event.preventDefault()
+                      const next = draft.trim()
+                      onSaveReply(next)
+                      if (!next) return
+                      openWhatsApp(`Tus créditos:\n${next}`)
+                      setEditingReply(false)
+                    }}
+                  >
+                    <label className="sr-only" htmlFor="reply">
+                      Tu turno
+                    </label>
+                    <textarea
+                      id="reply"
+                      value={draft}
+                      maxLength={400}
+                      rows={3}
+                      placeholder="Si esta película tuviera tus créditos…"
+                      onChange={(event) => setDraft(event.target.value)}
+                    />
+                    <p className="send-hint">Se abre WhatsApp para enviárselo.</p>
+                    <div className="reply-actions">
+                      <button type="submit" className="btn btn-play">
+                        Enviar por WhatsApp
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
+              <div className="music-frame">
+                <iframe
+                  className="music-embed"
+                  title="Te encontré, El Vega"
+                  src="https://open.spotify.com/embed/track/0HRZMXEiqvPsO7EsYJrHn1?utm_source=generator&theme=0"
+                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                  loading="lazy"
+                />
+              </div>
             </div>
           ) : (
             <>
@@ -299,7 +436,13 @@ function Player({ autoPlay, onClose }) {
                   Momento {index + 1} de {last}
                 </p>
                 <h2>{slide.titulo}</h2>
-                <p>{slide.texto}</p>
+                <p className="caption-text">{slide.texto}</p>
+                {notes.moments[slide.id] ? (
+                  <p className="player-her-note">
+                    <span>Tu versión. </span>
+                    {notes.moments[slide.id]}
+                  </p>
+                ) : null}
               </div>
             </>
           )}
@@ -367,6 +510,26 @@ function App() {
   const [toast, setToast] = useState('')
   const [moment, setMoment] = useState(null)
   const [playerOpen, setPlayerOpen] = useState(false)
+  const [notes, setNotes] = useState(readNotes)
+
+  function saveReply(text) {
+    setNotes((current) => {
+      const next = { ...current, reply: text }
+      writeNotes(next)
+      return next
+    })
+  }
+
+  function saveMomentNote(id, text) {
+    setNotes((current) => {
+      const moments = { ...current.moments }
+      if (text) moments[id] = text
+      else delete moments[id]
+      const next = { ...current, moments }
+      writeNotes(next)
+      return next
+    })
+  }
 
   useEffect(() => {
     document.title = story.title.replace('\n', ' ')
@@ -493,10 +656,19 @@ function App() {
           {toast}
         </div>
       ) : null}
-      {moment ? <MomentModal moment={moment} onClose={closeMoment} /> : null}
+      {moment ? (
+        <MomentModal
+          moment={moment}
+          note={notes.moments[moment.id] || ''}
+          onSaveNote={saveMomentNote}
+          onClose={closeMoment}
+        />
+      ) : null}
       {playerOpen ? (
         <Player
           autoPlay={!window.matchMedia('(prefers-reduced-motion: reduce)').matches}
+          notes={notes}
+          onSaveReply={saveReply}
           onClose={closePlayer}
         />
       ) : null}

@@ -1,3 +1,21 @@
+.music-frame {
+  width: min(100%, 28rem);
+  margin: 22px auto 0;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #121212;
+  line-height: 0;
+}
+
+.music-embed {
+  display: block;
+  width: 100%;
+  height: 152px;
+  border: 0;
+  color-scheme: dark;
+  background: #121212;
+}
+
 .page {
   min-height: 100svh;
   text-align: left;
@@ -462,10 +480,84 @@
   font-size: clamp(1.4rem, 3vw, 1.8rem);
 }
 
-.modal-copy p:last-child {
+.moment-text {
   color: #e6e6e6;
   font-size: 1.05rem;
   line-height: 1.55;
+}
+
+.note-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.note-field label {
+  color: var(--match);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.note-field textarea,
+.reply-box textarea {
+  width: 100%;
+  min-height: 84px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 4px;
+  background: #2a2a2a;
+  color: #fff;
+  font: inherit;
+  line-height: 1.45;
+  resize: vertical;
+}
+
+.send-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.note-actions,
+.reply-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.note-actions {
+  justify-content: space-between;
+}
+
+.save-status {
+  min-height: 1.2em;
+  margin: 0;
+  color: var(--match);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.note-actions .btn,
+.reply-actions .btn {
+  min-height: 40px;
+  padding: 0 16px;
+}
+
+.text-btn {
+  margin-top: 10px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
 }
 
 .player {
@@ -530,7 +622,8 @@
 }
 
 .player-caption h2,
-.player-caption p:last-child {
+.player-caption .caption-text,
+.player-her-note {
   max-width: 40rem;
 }
 
@@ -540,30 +633,70 @@
   text-shadow: 0 2px 18px rgba(0, 0, 0, 0.65);
 }
 
-.player-caption p:last-child {
+.player-caption .caption-text {
   color: #ececec;
   font-size: 1.05rem;
   line-height: 1.5;
 }
 
+.player-her-note {
+  margin-top: 10px;
+  color: #fff;
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.player-her-note span {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--match);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
 .player-slide.is-end {
   align-items: center;
   justify-content: center;
+  overflow: auto;
   text-align: center;
-  padding: 24px;
+  padding: 72px 24px 24px;
   background:
     radial-gradient(circle at 50% 38%, rgba(229, 9, 20, 0.38), transparent 42%),
     #000;
 }
 
 .player-end {
-  max-width: 18em;
+  width: min(34rem, 100%);
+  max-width: 100%;
+}
+
+.reply-box {
+  margin-top: 28px;
+  text-align: center;
+}
+
+.reply-box textarea {
+  text-align: left;
+}
+
+.reply-actions {
+  justify-content: center;
+}
+
+.reply-saved {
+  color: #fff;
+  font-size: 1.12rem;
+  line-height: 1.5;
 }
 
 .player-script {
+  max-width: 12em;
+  margin-inline: auto;
   font-family: var(--script);
   font-weight: 400;
-  font-size: clamp(3rem, 8vw, 5.8rem);
+  font-size: clamp(2.6rem, 7vw, 4.6rem);
   line-height: 0.98;
   white-space: pre-line;
 }
