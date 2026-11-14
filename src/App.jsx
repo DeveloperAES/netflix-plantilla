@@ -283,7 +283,7 @@ function MomentModal({ moment, note, onSaveNote, onClose }) {
               }}
               onBlur={() => commit(draft)}
             />
-            <p className="send-hint">Se abre WhatsApp para enviárselo.</p>
+            {/* <p className="send-hint">Se abre WhatsApp para enviárselo.</p> */}
             <div className="note-actions">
               <p className="save-status" role="status">
                 {status}
